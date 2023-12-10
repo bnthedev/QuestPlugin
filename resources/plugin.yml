@@ -1,0 +1,7 @@
+name: Questy
+version: '${project.version}'
+main: questy.questy.Questy
+api-version: 1.20
+commands:
+  quest:
+    permission: quest.use
