@@ -1,9 +1,12 @@
 messages:
-  start_quest_zombie: "&6&lQuest &8>>> &7You've started the quest: &6%quest%. &7You have to kill &620 &7zombies!"
   start_quest_walking: "&6&lQuest &8>>> &7You've started the quest: &6%quest%. &7You have to walk &6200&7 blocks."
+  start_quest_miner: "&6&lQuest &8>>> &7You've started the quest: &6%quest%. &7You have to mine &6100&7 stones."
+  start_quest_zomb: "&6&lQuest &8>>> &7You've started the quest: &6%quest%. &7You have to kill &620 &7zombies!"
 
-  complete_quest_200blocks: "&6&lQuest &8>>> &7Congratulations! You've walked &6200&7 blocks and completed the quest."
+  complete_quest_walk: "&6&lQuest &8>>> &7Congratulations! You've walked &6200&7 blocks and completed the quest."
   complete_quest_kill_zombie: "&6&lQuest &8>>> &7Congratulations! You've killed &620&7 zombies and completed the quest."
+  complete_quest_miner: "&6&lQuest &8>>> &7Congratulations! You've mined &6100&7 stones and completed the quest."
+
   reset_quest: "&6&lQuest &8>>> &7Your current quest has been reset."
   active_quest: "&6&lQuest &8>>> &cYou already have an active quest. Complete it or use &6/quest reset&c to restart."
   unknown_quest: "&6&lQuest &8>>> &cUnknown quest name."
