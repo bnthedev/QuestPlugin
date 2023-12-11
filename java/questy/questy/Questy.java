@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -12,6 +13,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -47,39 +49,19 @@ public final class Questy extends JavaPlugin implements Listener, CommandExecuto
         if (args.length == 1) {
             String questName = args[0];
 
-            if (questName.equalsIgnoreCase("walkquest") || questName.equalsIgnoreCase("killzombiequest")) {
-                if (config.getString(player.getUniqueId() + ".quest") != null) {
-                    player.sendMessage(getMessage("active_quest"));
-                    return true;
-                }
-
-                config.set(player.getUniqueId() + ".progress", 0);
-
-                config.set(player.getUniqueId() + ".quest", questName);
-                saveConfig();
-
-                player.sendMessage(getMessage("start_quest_walking").replace("%quest%", questName));
+            if (questName.equalsIgnoreCase("walkquest")) {
+                handleQuest(player, questName, "start_quest_walking");
             } else if (questName.equalsIgnoreCase("killzombiequest")) {
-                if (config.getString(player.getUniqueId() + ".quest") != null) {
-                    player.sendMessage(getMessage("active_quest"));
-                    return true;
-                }
-
-                config.set(player.getUniqueId() + ".progress", 0);
-
-                config.set(player.getUniqueId() + ".quest", questName);
-                saveConfig();
-
-                player.sendMessage(getMessage("start_quest_zombie").replace("%quest%", questName));
-
+                handleQuest(player, questName, "start_quest_zomb");
+            } else if (questName.equalsIgnoreCase("minerquest")) {
+                handleQuest(player, questName, "start_quest_miner");
             } else if (questName.equalsIgnoreCase("reset")) {
                 resetQuest(player);
                 player.sendMessage(getMessage("reset_quest"));
             } else {
                 player.sendMessage(getMessage("unknown_quest"));
             }
-
-        } else if (args.length == 0){
+        } else if (args.length == 0) {
             openGUI(player);
         } else {
             player.sendMessage(getMessage("usage"));
@@ -103,14 +85,32 @@ public final class Questy extends JavaPlugin implements Listener, CommandExecuto
                 saveConfig();
 
                 if (progress + 1 >= 200) {
-                    player.sendMessage(getMessage("complete_quest_200blocks"));
+                    player.sendMessage(getMessage("complete_quest_walk"));
                     resetQuest(player);
                 }
             }
         } else if (quest != null && quest.equalsIgnoreCase("killzombiequest")) {
         }
     }
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        String quest = config.getString(player.getUniqueId() + ".quest");
 
+        if (quest != null && quest.equalsIgnoreCase("minerquest")) {
+            Block block = event.getBlock();
+            if (block.getType() == Material.STONE) {
+                int progress = config.getInt(player.getUniqueId() + ".progress");
+                config.set(player.getUniqueId() + ".progress", progress + 1);
+                saveConfig();
+
+                if (progress + 1 >= 100) {
+                    player.sendMessage(getMessage("complete_quest_miner"));
+                    resetQuest(player);
+                }
+            }
+        }
+    }
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
         if (event.getEntity().getType() == EntityType.ZOMBIE) {
@@ -131,7 +131,18 @@ public final class Questy extends JavaPlugin implements Listener, CommandExecuto
             }
         }
     }
+    private void handleQuest(Player player, String questName, String startMessage) {
+        if (config.getString(player.getUniqueId() + ".quest") != null) {
+            player.sendMessage(getMessage("active_quest"));
+            return;
+        }
 
+        config.set(player.getUniqueId() + ".progress", 0);
+        config.set(player.getUniqueId() + ".quest", questName);
+        saveConfig();
+
+        player.sendMessage(getMessage(startMessage).replace("%quest%", questName));
+    } 
     private void resetQuest(Player player) {
         config.set(player.getUniqueId() + ".quest", null);
         config.set(player.getUniqueId() + ".progress", null);
@@ -147,6 +158,7 @@ public final class Questy extends JavaPlugin implements Listener, CommandExecuto
             return "";
         }
     }
+
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (event.getView().getTitle().equals("Quest Selection")) {
@@ -166,6 +178,11 @@ public final class Questy extends JavaPlugin implements Listener, CommandExecuto
                 Player player = (Player) event.getWhoClicked();
                 player.closeInventory();
                 Bukkit.dispatchCommand(player, "quest reset");
+            }
+            if (event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.DIAMOND_PICKAXE) {
+                Player player = (Player) event.getWhoClicked();
+                player.closeInventory();
+                Bukkit.dispatchCommand(player, "quest minerquest");
             }
         }
     }
@@ -197,11 +214,21 @@ public final class Questy extends JavaPlugin implements Listener, CommandExecuto
         m3.setLore(lore3);
         item3.setItemMeta(m3);
 
+        ItemStack item4 = new ItemStack(Material.DIAMOND_PICKAXE);
+        ItemMeta m4 = item4.getItemMeta();
+        m4.setDisplayName(ChatColor.YELLOW + "Miner");
+        List<String> lore4 = new ArrayList<>();
+        lore4.add(ChatColor.GRAY + "You have to mine 100 stones!");
+        m4.setLore(lore4);
+        item4.setItemMeta(m4);
 
 
+
+        gui.setItem(0, item3);
         gui.setItem(3, item1);
-        gui.setItem(4, item3);
-        gui.setItem(5, item2);
+        gui.setItem(4, item2);
+        gui.setItem(5, item4);
+
 
 
         player.openInventory(gui);
